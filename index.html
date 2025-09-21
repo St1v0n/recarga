@@ -2,15 +2,118 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Sistema de Recargas</title>
-  <link rel="stylesheet" href="css/estilos.css">
+  <title>💳 Sistema de Recargas</title>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Íconos Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Librería para exportar a Excel -->
+  <style>
+    body {
+      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+      max-width: 1050px;
+    }
+
+    .card-custom {
+      border: none;
+      border-radius: 15px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card-custom:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary {
+      background: #4e73df;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #375ac4;
+    }
+
+    .btn-success {
+      background: #1cc88a;
+      border: none;
+    }
+    .btn-success:hover {
+      background: #17a673;
+    }
+
+    .btn-danger {
+      background: #e74a3b;
+      border: none;
+    }
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .form-control:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.15rem rgba(78, 115, 223, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container my-5 p-4 bg-white rounded shadow-lg">
+    <h1 class="text-center mb-4 text-primary">
+      <i class="bi bi-lightning-charge-fill"></i> Sistema de Recargas
+    </h1>
+
+    <!-- Botón Excel -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 text-success">
+        Total Ganancias: $<span id="totalGanancias">0.00</span>
+      </h4>
+      <button id="descargarExcel" class="btn btn-primary shadow-sm">
+        <i class="bi bi-file-earmark-excel-fill"></i> Descargar Excel
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form id="recargaForm" class="row g-3 mb-4">
+      <div class="col-md-4">
+        <input type="text" name="nombre" id="inputNombre" class="form-control shadow-sm" placeholder="👤 Nombre del cliente (opcional)">
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="numero" class="form-control shadow-sm" placeholder="📱 Número de teléfono" required>
+      </div>
+      <div class="col-md-4">
+        <input type="number" name="monto" id="inputMonto" class="form-control shadow-sm" placeholder="💰 Monto" required>
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="usuario" class="form-control shadow-sm" placeholder="🙋 Quién hizo la recarga" required>
+      </div>
+      <div class="col-md-4">
+        <input type="number" name="yapa" id="inputYapa" class="form-control shadow-sm" placeholder="🎁 Yapa" readonly>
+      </div>
+      <div class="col-md-4">
+        <input type="date" name="fechaRe" class="form-control shadow-sm" required>
+      </div>
+      <div class="col-12 text-center">
+        <button type="submit" class="btn btn-success px-4 shadow-sm">
+          <i class="bi bi-plus-circle"></i> Guardar Recarga
+        </button>
+      </div>
+    </form>
+
+    <!-- Contenedor Recargas -->
+    <div id="recargasContainer" class="row g-4"></div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Librería para Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
     // Configuración Firebase
     const firebaseConfig = {
@@ -28,17 +131,21 @@
     const form = document.getElementById("recargaForm");
     const recargasContainer = document.getElementById("recargasContainer");
     const totalSpan = document.getElementById("totalGanancias");
-    const inputMonto = document.querySelector('input[name="monto"]');
-    const inputYapa = document.querySelector('input[name="yapa"]');
-    const inputNombre = document.querySelector('input[name="nombre"]');
+    const inputMonto = document.getElementById("inputMonto");
+    const inputYapa = document.getElementById("inputYapa");
+    const inputNombre = document.getElementById("inputNombre");
 
-    // Calcular Yapa automáticamente (50% del monto)
+    // Calcular Yapa automáticamente (50% del monto, redondeo si impar)
     inputMonto.addEventListener("input", () => {
       const monto = parseFloat(inputMonto.value) || 0;
-      inputYapa.value = ((monto * 0.5)-0.5).toFixed(2);
+      let yapa = monto * 0.5;
+      if (monto % 2 !== 0) {
+        yapa = Math.floor(yapa);
+      }
+      inputYapa.value = yapa;
     });
 
-    // Formatear fecha automática (serverTimestamp)
+    // Formatear fecha automática
     function formatearFecha(fecha) {
       if (!fecha || !fecha.toDate) return "";
       const f = fecha.toDate();
@@ -52,7 +159,7 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const nombre_cliente = inputNombre.value.trim() || "Anonimo";
+      const nombre_cliente = form.nombre.value.trim() || "Anonimo";
       const numero_telefono = form.numero.value;
       const monto = parseFloat(form.monto.value);
       const usuario_recargador = form.usuario.value;
@@ -92,34 +199,35 @@
         const fechaTexto = data.fecha ? formatearFecha(data.fecha) : "";
 
         const card = document.createElement("div");
-        card.className = "recarga-card";
+        card.className = "col-md-4";
         card.innerHTML = `
-          <h3>${data.nombre_cliente}</h3>
-          <p><strong>Teléfono:</strong> ${data.numero_telefono}</p>
-          <p><strong>Monto:</strong> $${(data.monto || 0).toFixed(2)}</p>
-          <p><strong>Yapa:</strong> $${(data.yapa || 0).toFixed(2)}</p>
-          <p><strong>Recargador:</strong> ${data.usuario_recargador}</p>
-          <p><strong>Fecha Recarga:</strong> ${data.fechaRe || "No registrada"}</p>
-          <p class="fecha"><strong>Fecha Registro:</strong> ${fechaTexto}</p>
-          <button class="eliminar-btn">Eliminar</button>
+          <div class="card card-custom shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title text-primary">
+                <i class="bi bi-person-circle"></i> ${data.nombre_cliente}
+              </h5>
+              <p><strong>📱 Teléfono:</strong> ${data.numero_telefono}</p>
+              <p><strong>💰 Monto:</strong> $${(data.monto || 0).toFixed(2)}</p>
+              <p><strong>🎁 Yapa:</strong> $${(data.yapa || 0).toFixed(2)}</p>
+              <p><strong>🙋 Recargador:</strong> ${data.usuario_recargador}</p>
+              <p><strong>📅 Fecha Recarga:</strong> ${data.fechaRe || "No registrada"}</p>
+              <p class="text-muted"><i class="bi bi-calendar-event"></i> ${fechaTexto}</p>
+              <button class="btn btn-danger btn-sm">
+                <i class="bi bi-trash"></i> Eliminar
+              </button>
+            </div>
+          </div>
         `;
         recargasContainer.appendChild(card);
 
-        // ✅ Solo sumar el monto (NO yapa)
         total += (data.monto || 0);
 
-        // Botón Eliminar
-        const btnEliminar = card.querySelector(".eliminar-btn");
+        // Botón eliminar
+        const btnEliminar = card.querySelector("button");
         btnEliminar.addEventListener("click", async () => {
           const password = prompt("Ingresa la contraseña para eliminar esta recarga:");
           if (password === "12345") {
-            try {
-              await deleteDoc(doc(db, "recargas", docSnap.id));
-              alert("✅ Recarga eliminada correctamente");
-            } catch (e) {
-              console.error("Error eliminando recarga:", e);
-              alert("❌ No se pudo eliminar la recarga");
-            }
+            await deleteDoc(doc(db, "recargas", docSnap.id));
           } else {
             alert("❌ Contraseña incorrecta");
           }
@@ -159,31 +267,6 @@
         alert("❌ No se pudo exportar a Excel.");
       }
     });
-
   </script>
-</head>
-<body>
-  <div class="container">
-    <h1>Sistema de Recargas</h1>
-
-    <!-- Formulario -->
-    <form id="recargaForm" class="form-recarga">
-      <input type="text" name="nombre" placeholder="Nombre del cliente (opcional)">
-      <input type="text" name="numero" placeholder="Número de teléfono" required>
-      <input type="number" name="monto" placeholder="Monto" required>
-      <input type="text" name="usuario" placeholder="Quién hizo la recarga" required>
-      <input type="number" name="yapa" placeholder="Yapa" step="0.01" readonly>
-      <input type="date" name="fechaRe" required>
-      <button type="submit">Guardar Recarga</button>
-    </form>
-
-    <!-- Historial -->
-    <h2>Historial de Recargas</h2>
-    <div id="recargasContainer" class="recargas-container"></div>
-
-    <!-- Total y botón de Excel -->
-    <h3>Total Ganancias: <span id="totalGanancias">0.00</span></h3>
-    <button id="descargarExcel">📄 Descargar Excel</button>
-  </div>
 </body>
 </html>
