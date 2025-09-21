@@ -101,6 +101,12 @@
         padding: 12px 0;
       }
     }
+
+    /* Hacer cursor puntero en ganancias */
+    #totalGanancias {
+      cursor: pointer;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -110,7 +116,9 @@
 
   <!-- Total y botones -->
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-    <h4 class="text-success mb-2">Total Ganancias: $<span id="totalGanancias">0.00</span></h4>
+    <h4 class="text-success mb-2">
+      Total Ganancias: $<span id="totalGanancias">******</span>
+    </h4>
     <div class="d-flex gap-2 flex-wrap">
       <button id="descargarExcel" class="btn btn-primary mb-2">
         <i class="bi bi-file-earmark-excel-fill"></i> Descargar Excel
@@ -184,6 +192,11 @@
   const totalSpan = document.getElementById("totalGanancias");
   const inputMonto = document.getElementById("inputMonto");
   const inputYapa = document.getElementById("inputYapa");
+  const descargarBtn = document.getElementById("descargarExcel");
+  const toggleBtn = document.getElementById("toggleHistorial");
+
+  // Contraseña para ganancias y Excel
+  const clave = "12345";
 
   // Calcular Yapa
   inputMonto.addEventListener("input", () => {
@@ -215,10 +228,8 @@
 
   onSnapshot(q, (snapshot) => {
     recargasContainer.innerHTML = "";
-    let total = 0;
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      total += data.monto || 0;
       const card = document.createElement("div");
       card.className = "recarga-card";
       card.innerHTML = `
@@ -234,28 +245,49 @@
 
       card.querySelector("button").addEventListener("click", async () => {
         const password = prompt("Contraseña para eliminar:");
-        if (password === "12345") {
+        if (password === clave) {
           await deleteDoc(doc(db, "recargas", docSnap.id));
         } else {
           alert("❌ Contraseña incorrecta");
         }
       });
     });
-    totalSpan.textContent = total.toFixed(2);
+    // Ocultar ganancias al actualizar
+    totalSpan.textContent = "******";
   });
 
-  // Exportar Excel
-  document.getElementById("descargarExcel").addEventListener("click", async () => {
-    const snapshot = await getDocs(q);
-    const datos = snapshot.docs.map(d => d.data());
-    const ws = XLSX.utils.json_to_sheet(datos);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Recargas");
-    XLSX.writeFile(wb, "recargas.xlsx");
+  // Mostrar ganancias solo con contraseña
+  totalSpan.addEventListener("click", async () => {
+    const inputClave = prompt("Ingresa la contraseña para ver las ganancias:");
+    if (inputClave === clave) {
+      const snapshot = await getDocs(q);
+      let total = 0;
+      snapshot.docs.forEach(d => {
+        total += d.data().monto || 0;
+      });
+      totalSpan.textContent = total.toFixed(2);
+    } else {
+      alert("❌ Contraseña incorrecta");
+      totalSpan.textContent = "******";
+    }
+  });
+
+  // Descargar Excel protegido
+  descargarBtn.addEventListener("click", async () => {
+    const inputClave = prompt("Ingresa la contraseña para descargar Excel:");
+    if (inputClave === clave) {
+      const snapshot = await getDocs(q);
+      const datos = snapshot.docs.map(d => d.data());
+      const ws = XLSX.utils.json_to_sheet(datos);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Recargas");
+      XLSX.writeFile(wb, "recargas.xlsx");
+    } else {
+      alert("❌ Contraseña incorrecta");
+    }
   });
 
   // Botón mostrar/ocultar historial
-  const toggleBtn = document.getElementById("toggleHistorial");
   let historialVisible = true;
   toggleBtn.addEventListener("click", () => {
     historialVisible = !historialVisible;
@@ -264,7 +296,6 @@
       ? '<i class="bi bi-eye-slash"></i> Ocultar Historial'
       : '<i class="bi bi-eye"></i> Mostrar Historial';
   });
-
 </script>
 </body>
 </html>
