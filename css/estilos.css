@@ -8,12 +8,13 @@
 body {
   background: #f4f6f8;
   color: #333;
+  font-size: 16px;
 }
 
 .container {
   max-width: 900px;
-  margin: 40px auto;
-  padding: 25px;
+  margin: 20px auto;
+  padding: 20px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0px 10px 25px rgba(0,0,0,0.1);
@@ -27,38 +28,58 @@ h1, h2, h3 {
 .form-recarga {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 30px;
   justify-content: center;
 }
 
 .form-recarga input {
-  padding: 12px;
-  flex: 1 1 150px;
+  padding: 14px;
+  flex: 1 1 200px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .form-recarga button {
-  padding: 12px 25px;
+  padding: 14px 28px;
   background: #27ae60;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .form-recarga button:hover {
   background: #219150;
 }
 
+/* Botón Excel arriba */
+.btn-excel {
+  display: block;
+  margin: 0 auto 20px auto;
+  padding: 12px 20px;
+  background: #2980b9;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-excel:hover {
+  background: #1f6391;
+}
+
 /* Contenedor de tarjetas */
 .recargas-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 15px;
 }
 
@@ -66,7 +87,7 @@ h1, h2, h3 {
 .recarga-card {
   background: #f9f9f9;
   border-radius: 12px;
-  padding: 15px;
+  padding: 18px;
   box-shadow: 0px 5px 15px rgba(0,0,0,0.05);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -77,21 +98,61 @@ h1, h2, h3 {
 }
 
 .recarga-card h3 {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   color: #2980b9;
+  font-size: 18px;
 }
 
 .recarga-card p {
-  font-size: 14px;
-  margin-bottom: 6px;
+  font-size: 15px;
+  margin-bottom: 8px;
 }
 
 .recarga-card .fecha {
-  font-size: 12px;
+  font-size: 13px;
   color: #888;
   text-align: right;
 }
 
 h3 span {
   color: #e74c3c;
+}
+
+/* 📱 Mobile Friendly */
+@media (max-width: 600px) {
+  body {
+    font-size: 18px;
+  }
+
+  .container {
+    margin: 10px;
+    padding: 15px;
+  }
+
+  .form-recarga {
+    flex-direction: column;
+  }
+
+  .form-recarga input,
+  .form-recarga button {
+    flex: 1 1 100%;
+    font-size: 18px;
+  }
+
+  .btn-excel {
+    width: 100%;
+    font-size: 18px;
+  }
+
+  .recargas-container {
+    grid-template-columns: 1fr;
+  }
+
+  .recarga-card h3 {
+    font-size: 20px;
+  }
+
+  .recarga-card p {
+    font-size: 16px;
+  }
 }
